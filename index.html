@@ -1,22 +1,36 @@
-   }
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Emotion Detection</title>
+</head>
 
-      emotionText.innerText =
-        "Emotion: " + maxEmotion.toUpperCase();
+</body>
+   <h1>AI Emotion Detection</h1>
 
-      statusText.innerText =
-        "Face detected ✓";
+   <video id="video" width="320 height="240
+autoplay></video>
+   <h2 id="emotionText">Emotion: _ _</h2>
+   <p id="statusText">Starting camera...</p>
 
-    } else {
+   <script>
+      const video =
+document.getElementById("video");
+      const emotionText =
+document.getElementById("emotionText");
+      const statusText =
+document.getElementById("statusText");
 
-      emotionText.innerText = "Emotion: --";
-      statusText.innerText = "No face detected";
-    }
-
-  }, 500);
-
-});
-
-</script>
+      navigator.mediaDevices.getUserMedia( { video:
+true } ) 
+      .then(stream => {
+         video.srcObject = stream;
+         statusText.innerText = "Camera strated";
+      })
+      .catch(error => {
+         statusText.innerText = "Camera
+permission denied";
+      });
+   </script>
 
 </body>
 </html>
