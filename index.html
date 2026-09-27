@@ -1,101 +1,78 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>AI Emotion Detection</title>
-
-  <!-- Face API -->
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial;
-    }
-
-    video {
-      width: 320px;
-      height: 240px;
-      border: 2px solid black;
-    }
-  </style>
 </head>
 
-<body>
+<body style="text-align:center;font-family:Arial">
 
-  <h1>AI Emotion Detection</h1>
+<h1>AI Emotion Detection</h1>
 
-  <video id="video" autoplay muted></video>
+<video id="video" width="320" height="240" autoplay muted></video>
 
-  <h2 id="emotionText">Emotion: --</h2>
-  <p id="statusText">Loading...</p>
+<h2 id="emotionText">Emotion: --</h2>
+<p id="statusText">Starting...</p>
 
-  <script>
+<script>
+const video = document.getElementById("video");
+const emotionText = document.getElementById("emotionText");
+const statusText = document.getElementById("statusText");
 
-    const video = document.getElementById("video");
-    const emotionText = document.getElementById("emotionText");
-    const statusText = document.getElementById("statusText");
+const MODEL_URL =
+"https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights";
 
-    // Models कुठून load करायचे
-    const MODEL_URL =
-      "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights";
+async function startApp() {
+  try {
+    statusText.innerText = "Loading AI model...";
 
-    async function startApp() {
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
 
-      statusText.innerText = "Loading AI model...";
+    statusText.innerText = "Starting camera...";
 
-      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-
-      statusText.innerText = "Starting camera...";
-
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          video.srcObject = stream;
-          statusText.innerText = "Camera started";
-        })
-        .catch(error => {
-          statusText.innerText = "Camera permission denied";
-        });
-    }
-
-    video.addEventListener("play", () => {
-
-      setInterval(async () => {
-
-        const detections = await faceapi
-          .detectAllFaces(
-            video,
-            new faceapi.TinyFaceDetectorOptions()
-          )
-          .withFaceExpressions();
-
-        if (detections.length > 0) {
-
-          const expressions = detections[0].expressions;
-
-          const emotion = Object.keys(expressions).reduce(
-            (a, b) => expressions[a] > expressions[b] ? a : b
-          );
-
-          emotionText.innerText =
-            "Emotion: " + emotion.toUpperCase();
-
-          statusText.innerText = "Face detected ✓";
-
-        } else {
-
-          emotionText.innerText = "Emotion: --";
-          statusText.innerText = "No face detected";
-
-        }
-
-      }, 500);
-
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true
     });
 
-    startApp();
+    video.srcObject = stream;
+  } catch (error) {
+    console.log(error);
+    statusText.innerText = "Error loading model/camera";
+  }
+}
 
-  </script>
+video.addEventListener("play", () => {
+  setInterval(async () => {
+
+    const result = await faceapi
+      .detectSingleFace(
+        video,
+        new faceapi.TinyFaceDetectorOptions()
+      )
+      .withFaceExpressions();
+
+    if (result) {
+      const expressions = result.expressions;
+
+      const emotion = Object.keys(expressions).reduce(
+        (a, b) => expressions[a] > expressions[b] ? a : b
+      );
+
+      emotionText.innerText =
+        "Emotion: " + emotion.toUpperCase();
+
+      statusText.innerText = "Face detected ✓";
+    } else {
+      emotionText.innerText = "Emotion: --";
+      statusText.innerText = "No face detected";
+    }
+
+  }, 500);
+});
+
+startApp();
+</script>
 
 </body>
 </html>
