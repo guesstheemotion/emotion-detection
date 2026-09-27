@@ -1,78 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>AI Emotion Detection</title>
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-</head>
 
-<body style="text-align:center;font-family:Arial">
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js">
+  </script>
 
-<h1>AI Emotion Detection</h1>
-
-<video id="video" width="320" height="240" autoplay muted></video>
-
-<h2 id="emotionText">Emotion: --</h2>
-<p id="statusText">Starting...</p>
-
-<script>
-const video = document.getElementById("video");
-const emotionText = document.getElementById("emotionText");
-const statusText = document.getElementById("statusText");
-
-const MODEL_URL =
-"https://justadudewhohacks.github.io/face-api.js/models";
-
-async function startApp() {
-  try {
-    statusText.innerText = "Loading AI model...";
-
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-
-    statusText.innerText = "Starting camera...";
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true
-    });
-
-    video.srcObject = stream;
- } catch (error) {
-  console.error(error);
-  statusText.innerText = "ERROR: " + error.message;
-}
-}
-
-video.addEventListener("play", () => {
-  setInterval(async () => {
-
-    const result = await faceapi
-      .detectSingleFace(
-        video,
-        new faceapi.TinyFaceDetectorOptions()
-      )
-      .withFaceExpressions();
-
-    if (result) {
-      const expressions = result.expressions;
-
-      const emotion = Object.keys(expressions).reduce(
-        (a, b) => expressions[a] > expressions[b] ? a : b
-      );
-
-      emotionText.innerText =
-        "Emotion: " + emotion.toUpperCase();
-
-      statusText.innerText = "Face detected ✓";
-    } else {
-      emotionText.innerText = "Emotion: --";
-      statusText.innerText = "No face detected";
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f5f5f5;
+      padding: 20px;
     }
 
-  }, 500);
-});
+    h1 {
+      margin-bottom: 10px;
+    }
 
-startApp();
-</script>
+    video {
+      width: 90%;
+      max-width: 500px;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+
+    #emotionText {
+      font-size: 28px;
+      margin-top: 20px;
+    }
+
+    #statusText {
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>😊 AI Emotion Detection</h1>
+
+  <p>Facial Expression Recognition</p>
+
+  <video
+    id="video"
+    autoplay
+    muted
+    playsinline>
+  </video>
+
+  <h2 id="emotionText">Emotion: --</h2>
+
+  <p id="statusText">Starting...</p>
+
+  <script>
+
+    const video = document.getElementById("video");
+    const emotionText = document.getElementById("emotionText");
+    const statusText = document.getElementById("statusText");
+
+    const MODEL_URL =
+      "https://justadudewhohacks.github.io/face-api.js/models";
+
+
+    async function startApp() {
+
+      try {
+
+        statusText.innerText = "Loading AI model...";
+
+        // Load face detector
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+
+        // Load emotion recognition model
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+
+        statusText.innerText =
+          "AI model loaded. Starting camera...";
+
+
+        // Start camera
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
+
+        video.srcObject = stream;
+
+        statusText.innerText =
+          "Camera started. Looking for face...";
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        statusText.innerText =
+          "ERROR: " + error.message;
+      }
+    }
+
+
+    // Detect emotion when video starts
+    video.addEventListener("play", () => {
+
+      setInterval(async () => {
+
+        try {
+
+          const result =
+            await faceapi
+              .detectSingleFace(
+                video,
+                new faceapi.TinyFaceDetectorOptions()
+              )
+              .withFaceExpressions();
+
+
+          if (result) {
+
+            const expressions =
+              result.expressions;
+
+
+            const emotion =
+              Object.keys(expressions).reduce(
+                (a, b) =>
+                  expressions[a] > expressions[b]
+                    ? a
+                    : b
+              );
+
+
+            emotionText.innerText =
+              "Emotion: " +
+              emotion.toUpperCase();
+
+            statusText.innerText =
+              "Face detected ✓";
+
+          }
+
+          else {
+
+            emotionText.innerText =
+              "Emotion: --";
+
+            statusText.innerText =
+              "No face detected";
+
+          }
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          statusText.innerText =
+            "Detection error: " +
+            error.message;
+        }
+
+      }, 500);
+
+    });
+
+
+    // Start application
+    startApp();
+
+  </script>
 
 </body>
+
 </html>
