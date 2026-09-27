@@ -36,10 +36,10 @@ async function startApp() {
     });
 
     video.srcObject = stream;
-  } catch (error) {
-    console.log(error);
-    statusText.innerText = "Error loading model/camera";
-  }
+ } catch (error) {
+  console.error(error);
+  statusText.innerText = "ERROR: " + error.message;
+}
 }
 
 video.addEventListener("play", () => {
