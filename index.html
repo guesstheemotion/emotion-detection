@@ -7,9 +7,8 @@
 
   <title>AI Emotion Detection</title>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js">
-  </script>
+  <!-- Face API Library -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
 
   <style>
     body {
@@ -20,7 +19,7 @@
     }
 
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
     video {
@@ -32,12 +31,21 @@
 
     #emotionText {
       font-size: 28px;
+      font-weight: bold;
       margin-top: 20px;
     }
 
     #statusText {
       font-size: 16px;
       color: #555;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      margin-top: 15px;
     }
   </style>
 </head>
@@ -48,6 +56,10 @@
 
   <p>Facial Expression Recognition</p>
 
+  <button onclick="startCamera()">Start Camera</button>
+
+  <br>
+
   <video
     id="video"
     autoplay
@@ -57,7 +69,8 @@
 
   <h2 id="emotionText">Emotion: --</h2>
 
-  <p id="statusText">Starting...</p>
+  <p id="statusText">Loading AI model...</p>
+
 
   <script>
 
@@ -69,23 +82,43 @@
       "https://justadudewhohacks.github.io/face-api.js/models";
 
 
-    async function startApp() {
+    // Load AI models
+    async function loadModels() {
 
       try {
 
-        statusText.innerText = "Loading AI model...";
+        statusText.innerText =
+          "Loading AI models...";
 
-        // Load face detector
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+          MODEL_URL
+        );
 
-        // Load emotion recognition model
-        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(
+          MODEL_URL
+        );
 
         statusText.innerText =
-          "AI model loaded. Starting camera...";
+          "AI model ready. Click Start Camera.";
+
+      } catch (error) {
+
+        console.error(error);
+
+        statusText.innerText =
+          "Model Error: " + error.message;
+      }
+    }
 
 
-        // Start camera
+    // Start camera
+    async function startCamera() {
+
+      try {
+
+        statusText.innerText =
+          "Starting camera...";
+
         const stream =
           await navigator.mediaDevices.getUserMedia({
             video: true,
@@ -97,19 +130,17 @@
         statusText.innerText =
           "Camera started. Looking for face...";
 
-      }
-
-      catch (error) {
+      } catch (error) {
 
         console.error(error);
 
         statusText.innerText =
-          "ERROR: " + error.message;
+          "Camera Error: " + error.message;
       }
     }
 
 
-    // Detect emotion when video starts
+    // Detect emotion
     video.addEventListener("play", () => {
 
       setInterval(async () => {
@@ -131,13 +162,24 @@
               result.expressions;
 
 
-            const emotion =
-              Object.keys(expressions).reduce(
-                (a, b) =>
-                  expressions[a] > expressions[b]
-                    ? a
-                    : b
-              );
+            let emotion = "neutral";
+            let highestValue = 0;
+
+
+            for (const expression in expressions) {
+
+              if (
+                expressions[expression] >
+                highestValue
+              ) {
+
+                highestValue =
+                  expressions[expression];
+
+                emotion =
+                  expression;
+              }
+            }
 
 
             emotionText.innerText =
@@ -147,26 +189,21 @@
             statusText.innerText =
               "Face detected ✓";
 
-          }
-
-          else {
+          } else {
 
             emotionText.innerText =
               "Emotion: --";
 
             statusText.innerText =
               "No face detected";
-
           }
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
           console.error(error);
 
           statusText.innerText =
-            "Detection error: " +
+            "Detection Error: " +
             error.message;
         }
 
@@ -175,8 +212,8 @@
     });
 
 
-    // Start application
-    startApp();
+    // Load models when page opens
+    loadModels();
 
   </script>
 
